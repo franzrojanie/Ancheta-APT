@@ -16,17 +16,18 @@ This guide covers deploying both the **backend** (Node.js/Express) and **fronten
 
 - GitHub account
 - Render account (free at https://render.com)
+- Supabase account (free PostgreSQL at https://supabase.com)
 - Your repository pushed to GitHub (public or private)
-- Render PostgreSQL database (recommended and managed by Render)
 
-### Database Setup
-Render provides **managed PostgreSQL** at no cost. This is ideal for production deployment.
+### Database Setup (Supabase)
+**Supabase provides FREE PostgreSQL** - perfect for Render deployment.
 
-**Create a PostgreSQL Instance** (recommended)
-- Go to Render Dashboard → Create → PostgreSQL
-- Choose free tier (Starter)
-- Render will provide connection details automatically
-- Copy the **Internal Connection String** - you'll need it for backend environment variables
+**Create a PostgreSQL Database:**
+1. Go to [supabase.com](https://supabase.com) → Sign up (free)
+2. Create a new project
+3. Go to **Settings → Database**
+4. Copy the **Connection String** (it looks like: `postgresql://user:password@...`)
+5. Note your database credentials for Render environment variables
 
 ---
 
@@ -130,11 +131,11 @@ In **Environment** tab, add:
 ```
 PORT=3000
 NODE_ENV=production
-DB_HOST=your-render-postgres-host.render.com
+DB_HOST=your-supabase-host.supabase.co
 DB_PORT=5432
-DB_NAME=ancheta_apartment
-DB_USER=your_postgres_user
-DB_PASSWORD=your_secure_password
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=your-supabase-password
 DB_SSL=true
 FRONTEND_URL=https://ancheta-apartment-frontend.onrender.com
 JWT_SECRET=anchetasecret12345
@@ -142,10 +143,10 @@ PAYMONGO_SECRET_KEY=sk_test_vdnnC2dZRARq96ujUEodXaNq
 ```
 
 **Important**:
-- **JWT_SECRET**: Set to `anchetasecret12345` (or generate a new one with `openssl rand -base64 32` for production)
-- **DB_HOST/PORT**: Get these from your Render PostgreSQL dashboard
-- **DB_SSL**: Set to `true` for PostgreSQL over Render
-- **PAYMONGO_SECRET_KEY**: This is your test key; upgrade to live key when ready
+- **DB_HOST/PASSWORD**: Get from Supabase → Settings → Database → Connection String
+- **DB_SSL**: Always set to `true` for Supabase
+- **JWT_SECRET**: Set to `anchetasecret12345`
+- **PAYMONGO_SECRET_KEY**: This is your test key
 
 ### Step 4: Deploy
 
@@ -243,11 +244,11 @@ const API_BASE = process.env.VITE_API_BASE_URL
 ```env
 PORT=3000
 NODE_ENV=production
-DB_HOST=your-render-postgres-host.render.com
+DB_HOST=your-supabase-host.supabase.co
 DB_PORT=5432
-DB_NAME=ancheta_apartment
-DB_USER=postgres_user
-DB_PASSWORD=your_secure_password
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=your_supabase_password
 DB_SSL=true
 FRONTEND_URL=https://ancheta-apartment-frontend.onrender.com
 JWT_SECRET=anchetasecret12345
@@ -269,10 +270,10 @@ VITE_API_BASE_URL=https://ancheta-apartment-backend.onrender.com/api
 - Ensure `.env` variables are set correctly
 
 ### Database Connection Error
-- Verify PostgreSQL credentials in Render environment variables
-- Check that `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` are correct
-- Ensure `DB_SSL=true` for Render PostgreSQL
-- Check Render PostgreSQL dashboard to confirm database is running
+- Get credentials from Supabase → Settings → Database → Connection String
+- Extract: `postgresql://user:password@host:5432/postgres`
+- Ensure `DB_SSL=true` for Supabase
+- Check Supabase dashboard to confirm database is running
 
 ### Frontend Shows 404 on Navigation
 - Ensure **Publish Directory** is set to `dist`
@@ -293,9 +294,9 @@ VITE_API_BASE_URL=https://ancheta-apartment-backend.onrender.com/api
    - Render auto-provisions HTTPS with Let's Encrypt
 
 2. **Database Backups**
-   - Render PostgreSQL includes automatic daily backups
-   - Access backups in PostgreSQL dashboard → Backups tab
-   - Configure backup retention period (7 days default)
+   - Supabase automatically backs up your database
+   - Access backups in Supabase dashboard → Settings → Backups
+   - Free plan includes 7-day backup retention
 
 3. **Monitor Production**
    - Backend: Check **Logs** tab for errors
