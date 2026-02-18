@@ -13,7 +13,11 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',  // Local development
+    'https://ancheta-apartment-frontend.onrender.com',  // Render production
+    process.env.FRONTEND_URL
+  ].filter(url => url),
   credentials: true
 }));
 app.use(express.json());
