@@ -17,19 +17,41 @@ This guide covers deploying both the **backend** (Node.js/Express) and **fronten
 - GitHub account
 - Render account (free at https://render.com)
 - Your repository pushed to GitHub (public or private)
-- MySQL database (either local MySQL connected from Render, or Render's managed PostgreSQL)
+- Render PostgreSQL database (recommended and managed by Render)
 
-### Note on Database
-**Render does NOT provide MySQL/MariaDB**. You have these options:
+### Database Setup
+Render provides **managed PostgreSQL** at no cost. This is ideal for production deployment.
 
-**Option A: Use your own MySQL server** (recommended for cPanel integration)
-- Keep your existing MySQL server running (e.g., on cPanel)
-- Use the public IP or domain to connect from Render
-- Set `DB_HOST` to your server's IP/domain in Render environment variables
+**Create a PostgreSQL Instance** (recommended)
+- Go to Render Dashboard → Create → PostgreSQL
+- Choose free tier (Starter)
+- Render will provide connection details automatically
+- Copy the **Internal Connection String** - you'll need it for backend environment variables
 
-**Option B: Migrate to PostgreSQL**
-- Render offers managed PostgreSQL
-- Requires database schema migration (not covered here)
+---
+
+## ⚠️ Important: PostgreSQL Migration
+
+Since you're moving away from cPanel/MySQL to Render, the backend has been updated to use **PostgreSQL** instead of MySQL.
+
+### What Changed:
+1. ✅ Replaced `mysql2` package with `pg` (PostgreSQL driver)
+2. ✅ Updated `backend/config/database.js` for PostgreSQL connections
+3. ✅ Rewritten `backend/scripts/migrate.js` with PostgreSQL-compatible SQL
+4. ✅ Updated `backend/scripts/seed.js` to work with PostgreSQL
+5. ✅ Added missing database columns: `address`, `bedrooms`, `bathrooms`, `area_sqft`, `description`, `amenities`, `images`
+
+### Before Deploying:
+
+**Locally**, run:
+```bash
+cd backend
+npm install
+npm run migrate
+npm run seed
+```
+
+This will set up the PostgreSQL schema with sample data.
 
 ---
 
@@ -108,20 +130,22 @@ In **Environment** tab, add:
 ```
 PORT=3000
 NODE_ENV=production
-DB_HOST=YOUR_MYSQL_SERVER_IP_OR_DOMAIN
-DB_PORT=3306
+DB_HOST=your-render-postgres-host.render.com
+DB_PORT=5432
 DB_NAME=ancheta_apartment
-DB_USER=YOUR_DB_USER
-DB_PASSWORD=YOUR_DB_PASSWORD
-FRONTEND_URL=https://YOUR_FRONTEND_DOMAIN.onrender.com
-PAYMONGO_SECRET_KEY=YOUR_PAYMONGO_KEY_HERE
-JWT_SECRET=your-super-secret-key-change-this
+DB_USER=your_postgres_user
+DB_PASSWORD=your_secure_password
+DB_SSL=true
+FRONTEND_URL=https://ancheta-apartment-frontend.onrender.com
+JWT_SECRET=anchetasecret12345
+PAYMONGO_SECRET_KEY=sk_test_vdnnC2dZRARq96ujUEodXaNq
 ```
 
 **Important**:
-- If MySQL is on **cPanel**: Use cPanel's public IP or domain
-- Set strong `JWT_SECRET` (use: `openssl rand -base64 32`)
-- Or leave `PAYMONGO_SECRET_KEY` empty if not using PayMongo yet
+- **JWT_SECRET**: Set to `anchetasecret12345` (or generate a new one with `openssl rand -base64 32` for production)
+- **DB_HOST/PORT**: Get these from your Render PostgreSQL dashboard
+- **DB_SSL**: Set to `true` for PostgreSQL over Render
+- **PAYMONGO_SECRET_KEY**: This is your test key; upgrade to live key when ready
 
 ### Step 4: Deploy
 
@@ -215,18 +239,19 @@ const API_BASE = process.env.VITE_API_BASE_URL
 
 ## Environment Variables Reference
 
-### Backend (`backend/.env`)
+### Backend (`backend/.env` for local) / Render Variables (for production)
 ```env
 PORT=3000
 NODE_ENV=production
-DB_HOST=your-mysql-server.com
-DB_PORT=3306
+DB_HOST=your-render-postgres-host.render.com
+DB_PORT=5432
 DB_NAME=ancheta_apartment
-DB_USER=root
+DB_USER=postgres_user
 DB_PASSWORD=your_secure_password
+DB_SSL=true
 FRONTEND_URL=https://ancheta-apartment-frontend.onrender.com
-JWT_SECRET=your-random-secret-key-here
-PAYMONGO_SECRET_KEY=pk_live_xxx (optional)
+JWT_SECRET=anchetasecret12345
+PAYMONGO_SECRET_KEY=sk_test_vdnnC2dZRARq96ujUEodXaNq
 ```
 
 ### Frontend (`frontend/.env.local` or Render env vars)
@@ -244,9 +269,10 @@ VITE_API_BASE_URL=https://ancheta-apartment-backend.onrender.com/api
 - Ensure `.env` variables are set correctly
 
 ### Database Connection Error
-- Verify MySQL is accessible from Render's IP
-- Check firewall rules on cPanel server
-- Test connection locally with same credentials
+- Verify PostgreSQL credentials in Render environment variables
+- Check that `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` are correct
+- Ensure `DB_SSL=true` for Render PostgreSQL
+- Check Render PostgreSQL dashboard to confirm database is running
 
 ### Frontend Shows 404 on Navigation
 - Ensure **Publish Directory** is set to `dist`
@@ -260,10 +286,32 @@ VITE_API_BASE_URL=https://ancheta-apartment-backend.onrender.com/api
 
 ## Next Steps
 
-1. Set up **custom domain** (Render → Settings → Custom Domains)
-2. Enable **HTTPS** (automatic on Render)
-3. Set up **database backups** (use cPanel's backup system)
-4. Monitor logs in Render dashboard for production issues
+1. **Set up Custom Domain**
+   - Go to Frontend service → Settings → Custom Domains
+   - Add your domain (e.g., `apartment.yourdomain.com`)
+   - Update DNS records pointing to Render
+   - Render auto-provisions HTTPS with Let's Encrypt
+
+2. **Database Backups**
+   - Render PostgreSQL includes automatic daily backups
+   - Access backups in PostgreSQL dashboard → Backups tab
+   - Configure backup retention period (7 days default)
+
+3. **Monitor Production**
+   - Backend: Check **Logs** tab for errors
+   - Frontend: Monitor **Build Logs** for build failures
+   - Set up alerts in Render dashboard
+
+4. **Upgrade PayMongo** (when ready)
+   - Switch from test key (`sk_test_...`) to live key (`sk_live_...`)
+   - Update `PAYMONGO_SECRET_KEY` in Render environment variables
+   - Test a live payment transaction
+
+5. **Performance & Security**
+   - Enable **Auto-Deploy** on push (default)
+   - Set up branch protection rules on GitHub
+   - Monitor backend memory usage in Render dashboard
+   - Consider upgrading plan if needed (Render free tier has limits)
 
 **Render Resources**:
 - [Render Docs](https://render.com/docs)
