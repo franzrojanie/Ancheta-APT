@@ -1,0 +1,25 @@
+{
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "env": {
+    "DB_HOST": "@db_host",
+    "DB_PORT": "@db_port",
+    "DB_NAME": "@db_name",
+    "DB_USER": "@db_user",
+    "DB_PASSWORD": "@db_password",
+    "DB_SSL": "@db_ssl",
+    "JWT_SECRET": "@jwt_secret",
+    "PAYMONGO_SECRET_KEY": "@paymongo_secret_key",
+    "FRONTEND_URL": "https://anchetasapartment.vercel.app"
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

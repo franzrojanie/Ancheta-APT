@@ -16,6 +16,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',  // Local development
     'https://ancheta-apartment-frontend.onrender.com',  // Render production
+    'https://anchetasapartment.vercel.app',  // Vercel production
     process.env.FRONTEND_URL
   ].filter(url => url),
   credentials: true
